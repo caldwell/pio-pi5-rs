@@ -540,7 +540,7 @@ impl TryFrom<f64> for ClkDiv {
     type Error=Error;
 
     fn try_from(div: f64) -> Result<Self, Self::Error> {
-        if div < 1_f64 || div > 65536_f64 {
+        if div != 0_f64 && (div < 1_f64 || div > 65536_f64) {
             Err(Error::BadDiv { div: div, min: 1_f64, max: 65536_f64 })?;
         }
         let div_int = div as u16;
