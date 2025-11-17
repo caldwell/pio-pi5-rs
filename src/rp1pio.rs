@@ -407,13 +407,13 @@ impl StateMachine {
         self.pio.sm_clkdiv_restart_mask(1 << self.index)
     }
 
-    pub fn rp1_pio_sm_put(&self, data: u32, blocking: bool) -> Result<(), Error> {
+    pub fn put(&self, data: u32, blocking: bool) -> Result<(), Error> {
         let args = SmPutArgs { sm: self.index, data, blocking: blocking.into(), rsvd:0 };
         self.pio.rp1_ioctl(PIO_IOC_SM_PUT, &args)
             .map(|_| ())
     }
 
-    pub fn rp1_pio_sm_get(&self, blocking: bool) -> Result<u32, Error> {
+    pub fn get(&self, blocking: bool) -> Result<u32, Error> {
         let mut args = SmGetArgs { sm: self.index, data:0, blocking: blocking.into(), rsvd:0 };
         self.pio.rp1_ioctl_mut(PIO_IOC_SM_GET, &mut args)?;
         Ok(args.data)
