@@ -136,10 +136,18 @@ impl Rp1PIO {
             .map(|r| r > 0)
     }
 
-    pub fn add_program_at_offset(&self, program: &PioProgram, offset: Option<u16>) -> Result<(), Error> {
+    pub fn can_add_program(&self, program: &PioProgram) -> Result<bool, Error> {
+        self.can_add_program_at_offset(program, None)
+    }
+
+    pub fn add_program_at_offset(&self, program: &PioProgram, offset: Option<u16>) -> Result<u16, Error> {
         let args = self.add_program_args(program, offset)?;
         self.rp1_ioctl(PIO_IOC_ADD_PROGRAM, &args)
-            .map(|_| ())
+            .map(|offset| offset as u16)
+    }
+
+    pub fn add_program(&self, program: &PioProgram) -> Result<u16, Error> {
+        self.add_program_at_offset(program, None)
     }
 
     pub fn remove_program(&self, program: &PioProgram, offset: Option<u16>) -> Result<bool, Error> {
