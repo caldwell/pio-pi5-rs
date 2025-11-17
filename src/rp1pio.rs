@@ -33,11 +33,6 @@ impl Rp1PIO {
         self.devname.as_path()
     }
 
-    // Not actual Clone since we can fail and we open a new fd.
-    pub fn clone(&self) -> Result<Rp1PIO, Error> {
-        Self::new(self.base.index)
-    }
-
     unsafe fn rp1_ioctl_mut_ptr(&self, request: c_ulong, args: *mut c_void) -> Result<u32, Error> {
         const NEG_EREMOTEIO: i32 = -libc::EREMOTEIO;
         const NEG_ETIMEDOUT: i32 = -libc::ETIMEDOUT;
@@ -173,30 +168,26 @@ impl Rp1PIO {
         .map(|r| r != 0)
     }
 
-    pub fn sm_claim(&self, sm: u16) -> Result<StateMachine, Error> {
-        let pio = self.clone()?; // do this first before we claim, since it technically can fail
+    pub fn sm_claim(&self, sm: u16) -> Result<StateMachine<'_>, Error> {
         self.check_sm_param(sm)?;
         let args = SmClaimArgs { mask: 1 << sm };
         self.rp1_ioctl(PIO_IOC_SM_CLAIM, &args)?;
-        Ok(StateMachine { pio, index: sm })
+        Ok(StateMachine { pio: &self, index: sm })
     }
 
-    pub fn sm_claim_mask(&self, mask: u16) -> Result<Vec<StateMachine>, Error> {
+    pub fn sm_claim_mask(&self, mask: u16) -> Result<Vec<StateMachine<'_>>, Error> {
         self.check_sm_mask(mask)?;
         let args = SmClaimArgs { mask };
         self.rp1_ioctl(PIO_IOC_SM_CLAIM, &args)?;
         (0..4).filter_map(|sm| match 1<<sm {
             0 => None,
-            _ => match self.clone() {
-                Err(e) => Some(Err(e)),
-                Ok(pio) => Some(Ok(StateMachine { pio, index: sm })),
-            },
+            _ => Some(Ok(StateMachine { pio: &self, index: sm })),
         }).collect()
     }
 
-    pub fn sm_claim_unused(&self) -> Result<StateMachine, Error> {
+    pub fn sm_claim_unused(&self) -> Result<StateMachine<'_>, Error> {
         let args = SmClaimArgs { mask: 0 };
-        Ok(StateMachine { pio: self.clone()?,
+        Ok(StateMachine { pio: &self,
                           index: self.rp1_ioctl(PIO_IOC_SM_CLAIM, &args)? as u16 })
     }
 
@@ -312,12 +303,12 @@ impl Rp1PIO {
 }
 
 
-pub struct StateMachine {
-    pio: Rp1PIO,
+pub struct StateMachine<'a> {
+    pio: &'a Rp1PIO,
     index: u16,
 }
 
-impl StateMachine {
+impl<'a> StateMachine<'a> {
     pub fn unclaim(self) -> Result<bool, Error> {
         let args = SmClaimArgs { mask: 1 << self.index };
         self.pio.rp1_ioctl(PIO_IOC_SM_UNCLAIM, &args)
