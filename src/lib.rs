@@ -3,7 +3,9 @@
 
 pub mod gpio;
 mod ioctl;
-pub mod rp1pio;
+mod rp1pio;
+
+pub use self::rp1pio::*;
 
 use std::sync::{LazyLock, Mutex};
 
