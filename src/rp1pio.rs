@@ -39,11 +39,13 @@ impl Rp1PIO {
     }
 
     unsafe fn rp1_ioctl_mut_ptr(&self, request: c_ulong, args: *mut c_void) -> Result<u32, Error> {
-        match 0-unsafe {
+        const NEG_EREMOTEIO: i32 = -libc::EREMOTEIO;
+        const NEG_ETIMEDOUT: i32 = -libc::ETIMEDOUT;
+        match unsafe {
             libc::ioctl(self.fd.as_raw_fd(), request, args)
         } {
-            libc::EREMOTEIO => Err(Error::RemoteIOErr),
-            libc::ETIMEDOUT => Err(Error::TimedOut),
+            NEG_EREMOTEIO   => Err(Error::RemoteIOErr),
+            NEG_ETIMEDOUT   => Err(Error::TimedOut),
             -1              => Err(std::io::Error::last_os_error())?,
             r@ ..-1         => Err(Error::Unknown(r)),
             r@ 0..          => Ok(r as u32),
