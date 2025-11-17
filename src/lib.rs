@@ -3,6 +3,8 @@
 
 pub mod gpio;
 mod ioctl;
+#[path="proc-pio.rs"]
+mod proc_pio;
 mod rp1pio;
 
 pub use self::rp1pio::*;
