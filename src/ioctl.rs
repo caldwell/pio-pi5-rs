@@ -3,16 +3,7 @@
 
 use libc::{c_ulong,_IOW,_IO,_IOWR};
 
-use crate::INSTRUCTION_COUNT;
-
-#[repr(C)]
-#[derive(Clone,Copy)]
-pub struct SmConfig {
-    clkdiv:     u32,
-    execctrl:   u32,
-    shiftctrl:  u32,
-    pinctrl:    u32,
-}
+use crate::{SmConfig, INSTRUCTION_COUNT};
 
 #[repr(C)]
 pub(crate) struct AddProgramArgs {

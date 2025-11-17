@@ -5,7 +5,7 @@ use std::{ffi::c_void, fs::File, os::fd::AsRawFd, path::{Path, PathBuf}};
 
 use libc::c_ulong;
 
-use crate::{Chip, Error, PIOInstance, GPIOS_MASK, GPIO_COUNT, GPIO_FUNC_PIO, INSTRUCTION_COUNT};
+use crate::{Chip, Error, PIOInstance, SmConfig, GPIOS_MASK, GPIO_COUNT, GPIO_FUNC_PIO, INSTRUCTION_COUNT};
 use crate::gpio::*;
 use crate::ioctl::*;
 
@@ -524,8 +524,8 @@ impl PioProgram {
 
 
 pub struct ClkDiv {
-    div: u16,
-    frac: u8,
+    pub div: u16,
+    pub frac: u8,
 }
 
 impl TryFrom<f64> for ClkDiv {

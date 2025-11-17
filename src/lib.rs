@@ -1,6 +1,7 @@
 // Copyright © 2025 David Caldwell <david@porkrind.org>
 // SPDX-License-Identifier: BSD-3-Clause
 
+mod config;
 pub mod gpio;
 mod ioctl;
 #[path="proc-pio.rs"]
@@ -8,6 +9,7 @@ mod proc_pio;
 mod rp1pio;
 
 pub use self::rp1pio::*;
+pub use self::config::SmConfig;
 
 use std::sync::{LazyLock, Mutex};
 
@@ -106,6 +108,7 @@ pub enum Error {
     BadPinDirs(u32),
     BadPinMask(u32),
     BadGPIO { gpio: u16, max: usize },
+    ParamErr { param: &'static str, should_be: String },
 }
 
 impl std::error::Error for Error {
@@ -130,6 +133,7 @@ impl std::fmt::Display for Error {
             Error::BadPinDirs(pin_dirs)                      => write!(f, "Bad pin_dirs: The bits {pin_dirs:#b} are out of range"),
             Error::BadPinMask(pin_mask)                      => write!(f, "Bad pin_dirs: The bits {pin_mask:#b} are out of range"),
             Error::BadGPIO { gpio, max }                     => write!(f, "Bad GPIO: {gpio} must be less than {max}"),
+            Error::ParamErr {param, should_be }              => write!(f, "Bad Parameter \"{param}\": should be {should_be}"),
         }
     }
 }
@@ -140,6 +144,18 @@ impl From<std::io::Error> for Error {
     }
 }
 
+#[repr(u32)]
+pub enum PioFifoJoin {
+    None = 0,
+    Tx   = 1,
+    Rx   = 2,
+}
+
+#[repr(u32)]
+pub enum PioMovStatus {
+    TxLessThan = 0,
+    RxLessThan = 1,
+}
 
 #[cfg(test)]
 mod tests {
