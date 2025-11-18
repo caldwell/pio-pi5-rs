@@ -487,14 +487,14 @@ impl<'a> StateMachine<'a> {
         };
         Ok(FifoHw {
             tx: FifoHwState {
-                level: ((raw.flevel >> (self.index as u32 * 8)) & 0xf) + (((raw.flevel2 >> (self.index as u32 * 8)) & 1) << 4),
-                full: raw.fstat & (0x10000 << self.index) != 0,
-                empty: raw.fstat & (0x1000000 << self.index) != 0,
+                level: ((raw.flevel >> (self.index * 8)) & 0xf) + (((raw.flevel2 >> (self.index * 8)) & 1) << 4),
+                full: raw.fstat & (1<<PROC_PIO_FSTAT_TXFULL_LSB << self.index) != 0,
+                empty: raw.fstat & (1<<PROC_PIO_FSTAT_TXEMPTY_LSB << self.index) != 0,
             },
             rx: FifoHwState {
                 level: ((raw.flevel >> (self.index * 8 + 4)) & 0xf) + (((raw.flevel2 >> (self.index * 8 + 4)) & 1) << 4),
-                full: raw.fstat & (0x1 << self.index) != 0,
-                empty: raw.fstat & (0x100 << self.index) != 0,
+                full: raw.fstat & (1<<PROC_PIO_FSTAT_RXFULL_LSB << self.index) != 0,
+                empty: raw.fstat & (1<<PROC_PIO_FSTAT_RXEMPTY_LSB << self.index) != 0,
             },
             raw,
         })
