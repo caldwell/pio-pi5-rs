@@ -420,33 +420,33 @@ impl<'a> StateMachine<'a> {
             .map(|_| ())
     }
 
-    fn fifo_state(&self, tx: bool) -> Result<SmFifoStateArgs, Error> {
+    pub fn fifo_state(&self, tx: bool) -> Result<FifoState, Error> {
         let mut args = SmFifoStateArgs { sm: self.index, tx: tx.into(), level:0, empty:0, full:0, rsvd:0 };
         self.pio.rp1_ioctl_mut(PIO_IOC_SM_FIFO_STATE, &mut args)?;
-        Ok(args)
+        Ok(FifoState { level: args.level as u32, empty: args.empty != 0, full: args.full != 0})
     }
 
     pub fn is_rx_fifo_empty(&self) -> Result<bool, Error> {
-        Ok(self.fifo_state(false)?.empty != 0)
+        Ok(self.fifo_state(false)?.empty)
     }
 
     pub fn is_rx_fifo_full(&self) -> Result<bool, Error> {
-        Ok(self.fifo_state(false)?.full != 0)
+        Ok(self.fifo_state(false)?.full)
     }
 
-    pub fn get_rx_fifo_level(&self) -> Result<u16, Error> {
+    pub fn get_rx_fifo_level(&self) -> Result<u32, Error> {
         Ok(self.fifo_state(false)?.level)
     }
 
     pub fn is_tx_fifo_empty(&self) -> Result<bool, Error> {
-        Ok(self.fifo_state(true)?.empty != 0)
+        Ok(self.fifo_state(true)?.empty)
     }
 
     pub fn is_tx_fifo_full(&self) -> Result<bool, Error> {
-        Ok(self.fifo_state(true)?.full != 0)
+        Ok(self.fifo_state(true)?.full)
     }
 
-    pub fn get_tx_fifo_level(&self) -> Result<u16, Error> {
+    pub fn get_tx_fifo_level(&self) -> Result<u32, Error> {
         Ok(self.fifo_state(true)?.level)
     }
 
@@ -486,12 +486,12 @@ impl<'a> StateMachine<'a> {
             flevel2 : data[4],
         };
         Ok(FifoHw {
-            tx: FifoHwState {
+            tx: FifoState {
                 level: ((raw.flevel >> (self.index * 8)) & 0xf) + (((raw.flevel2 >> (self.index * 8)) & 1) << 4),
                 full: raw.fstat & (1<<PROC_PIO_FSTAT_TXFULL_LSB << self.index) != 0,
                 empty: raw.fstat & (1<<PROC_PIO_FSTAT_TXEMPTY_LSB << self.index) != 0,
             },
-            rx: FifoHwState {
+            rx: FifoState {
                 level: ((raw.flevel >> (self.index * 8 + 4)) & 0xf) + (((raw.flevel2 >> (self.index * 8 + 4)) & 1) << 4),
                 full: raw.fstat & (1<<PROC_PIO_FSTAT_RXFULL_LSB << self.index) != 0,
                 empty: raw.fstat & (1<<PROC_PIO_FSTAT_RXEMPTY_LSB << self.index) != 0,
@@ -572,12 +572,12 @@ pub struct RawFifoHw {
 #[derive(Debug)]
 pub struct FifoHw {
     pub raw: RawFifoHw,
-    pub tx: FifoHwState,
-    pub rx: FifoHwState,
+    pub tx: FifoState,
+    pub rx: FifoState,
 }
 
 #[derive(Debug)]
-pub struct FifoHwState {
+pub struct FifoState {
     pub level: u32,
     pub full: bool,
     pub empty: bool,
