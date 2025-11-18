@@ -14,7 +14,7 @@ pub struct SmConfig {
 impl Default for SmConfig {
     fn default() -> Self {
         SmConfig { clkdiv: 0, execctrl: 0, shiftctrl: 0, pinctrl: 0 }
-            .set_clkdiv_int_frac(ClkDiv::try_from(1.0).unwrap()).unwrap()
+            .set_clkdiv(1.0).unwrap()
             .set_wrap(0, 31).unwrap()
             .set_in_shift(true, false, 32).unwrap()
             .set_out_shift(true, false, 32).unwrap()
