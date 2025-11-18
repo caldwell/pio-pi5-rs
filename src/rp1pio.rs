@@ -5,7 +5,7 @@ use std::{ffi::c_void, fs::File, os::fd::AsRawFd, path::{Path, PathBuf}};
 
 use libc::c_ulong;
 
-use crate::{Chip, Error, PIOInstance, SmConfig, GPIOS_MASK, GPIO_COUNT, GPIO_FUNC_PIO, INSTRUCTION_COUNT};
+use crate::{proc_pio::*, Chip, Error, PIOInstance, SmConfig, GPIOS_MASK, GPIO_COUNT, GPIO_FUNC_PIO, INSTRUCTION_COUNT};
 use crate::gpio::*;
 use crate::ioctl::*;
 
@@ -290,6 +290,7 @@ impl Rp1PIO {
     ////////// Not in piolib, but buried in the example piolib/examples/rp1sm.c from https://github.com/raspberrypi/utils.
 
     pub fn read_hw(&self, addr: u32, data: &mut [u32]) -> Result<u32, Error> {
+        let addr = 0xf000_0000 | addr; // proc_pio.h / proc-pio.rs register offsets don't include this base definition.
         let mut args = AccessHwArgs { addr,
                                       len: data.len() as u32 * size_of::<u32>() as u32,
                                       data: data as *mut [u32] as *mut c_void };
@@ -297,6 +298,7 @@ impl Rp1PIO {
     }
 
     pub fn write_hw(&self, addr: u32, data: &[u32]) -> Result<u32, Error> {
+        let addr = 0xf000_0000 | addr; // proc_pio.h / proc-pio.rs register offsets don't include this base definition.
         let args = AccessHwArgs { addr, len: data.len() as u32, data: data as *const [u32] as *mut c_void };
         self.rp1_ioctl(PIO_IOC_WRITE_HW, &args)
     }
@@ -457,9 +459,9 @@ impl<'a> StateMachine<'a> {
     pub fn read_hw_state_machine(&self) -> Result<StateMachineHw, Error> {
         // Taken from piolib/examples/rp1sm.c in https://github.com/raspberrypi/utils
         let mut data = [0; 0x20];
-        self.pio.read_hw(0xf00000cc + self.index as u32 * 0x20, &mut data)?;
+        self.pio.read_hw(PROC_PIO_SM0_CLKDIV_OFFSET + self.index as u32 * 0x20, &mut data)?;
         let mut ctrl_data = [0; 1];
-        self.pio.read_hw(0xf0000000, &mut ctrl_data)?;
+        self.pio.read_hw(PROC_PIO_CTRL_OFFSET, &mut ctrl_data)?;
         Ok(StateMachineHw {
             enabled    : (ctrl_data[0] >> self.index as u32) != 0,
             clkdiv     : data[0],
@@ -476,7 +478,7 @@ impl<'a> StateMachine<'a> {
     pub fn read_hw_fifo(&self) -> Result<FifoHw, Error> {
         // Taken from piolib/examples/rp1sm.c in https://github.com/raspberrypi/utils
         let mut data = [0; 64];
-        self.pio.read_hw(0xf0000000, &mut data)?;
+        self.pio.read_hw(PROC_PIO_CTRL_OFFSET, &mut data)?;
         let raw = RawFifoHw {
             ctrl    : data[0],
             fstat   : data[1],
