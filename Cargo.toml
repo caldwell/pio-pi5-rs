@@ -1,0 +1,9 @@
+[package]
+name = "pio-pi5-rs"
+description = "A Rust interface to the PIO kernel driver on the Raspberry Pi 5"
+version = "0.0.0-reserved"
+license-file = "LICENSE"
+repository = "https://github.com/caldwell/pio-pi5-rs"
+
+[lib]
+path = "lib.rs"
