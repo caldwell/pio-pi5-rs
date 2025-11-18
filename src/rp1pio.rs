@@ -179,7 +179,7 @@ impl Rp1PIO {
         self.check_sm_mask(mask)?;
         let args = SmClaimArgs { mask };
         self.rp1_ioctl(PIO_IOC_SM_CLAIM, &args)?;
-        (0..4).filter_map(|sm| match 1<<sm {
+        (0..4).filter_map(|sm| match mask & 1<<sm {
             0 => None,
             _ => Some(Ok(StateMachine { pio: &self, index: sm })),
         }).collect()
