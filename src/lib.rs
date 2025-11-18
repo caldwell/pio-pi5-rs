@@ -156,13 +156,3 @@ pub enum PioMovStatus {
     TxLessThan = 0,
     RxLessThan = 1,
 }
-
-#[cfg(test)]
-mod tests {
-    //use super::*;
-
-    #[test]
-    fn it_works() {
-        todo!()
-    }
-}
