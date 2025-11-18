@@ -22,7 +22,7 @@ def flush_section(buffer)
   buffer.each do |item|
     name_padded = item[:name].ljust(max_name_len)
     type_padded = item[:type].ljust(max_type_len)
-    puts "pub(crate) const #{name_padded} : #{type_padded} = #{item[:value]};"
+    puts "pub const #{name_padded} : #{type_padded} = #{item[:value]};"
   end
 
   buffer.clear
