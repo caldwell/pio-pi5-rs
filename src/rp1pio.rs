@@ -290,7 +290,9 @@ impl Rp1PIO {
     ////////// Not in piolib, but buried in the example piolib/examples/rp1sm.c from https://github.com/raspberrypi/utils.
 
     pub fn read_hw(&self, addr: u32, data: &mut [u32]) -> Result<u32, Error> {
-        let mut args = AccessHwArgs { addr, len: data.len() as u32, data: data as *mut [u32] as *mut c_void };
+        let mut args = AccessHwArgs { addr,
+                                      len: data.len() as u32 * size_of::<u32>() as u32,
+                                      data: data as *mut [u32] as *mut c_void };
         self.rp1_ioctl_mut(PIO_IOC_READ_HW, &mut args)
     }
 
