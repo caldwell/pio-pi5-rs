@@ -85,13 +85,13 @@ impl Rp1PIO {
             .map(|_| ())
     }
 
-    pub fn sm_xfer_data<T>(&self, sm: u16, dir: u16, data_bytes: u32, data: &T) -> Result<(), Error> {
+    pub fn sm_xfer_data<T>(&self, sm: u16, dir: XferDir, data_bytes: u32, data: &T) -> Result<(), Error> {
         self.check_sm_param(sm)?;
         if data_bytes > 0xffff {
-            let args = SmXferData32Args { sm, dir, data_bytes, data: data as *const T as *const c_void };
+            let args = SmXferData32Args { sm, dir: dir as u16, data_bytes, data: data as *const T as *const c_void };
             self.rp1_ioctl(PIO_IOC_SM_XFER_DATA32, &args)
         } else {
-            let args = SmXferDataArgs { sm, dir, rsvd: 0, data_bytes: data_bytes as u16, data: data as *const T as *const c_void };
+            let args = SmXferDataArgs { sm, dir: dir as u16, rsvd: 0, data_bytes: data_bytes as u16, data: data as *const T as *const c_void };
             self.rp1_ioctl(PIO_IOC_SM_XFER_DATA, &args)
         }
             .map(|_| ())
