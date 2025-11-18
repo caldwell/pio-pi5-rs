@@ -2,6 +2,7 @@
 name = "pio-pi5-rs"
 description = "A Rust interface to the PIO kernel driver on the Raspberry Pi 5"
 repository = "https://github.com/caldwell/pio-pi5-rs"
+license-file = "LICENSE"
 version = "0.1.0"
 edition = "2024"
 
