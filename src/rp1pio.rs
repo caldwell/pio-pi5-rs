@@ -458,12 +458,13 @@ impl<'a> StateMachine<'a> {
 
     pub fn read_hw_state_machine(&self) -> Result<StateMachineHw, Error> {
         // Taken from piolib/examples/rp1sm.c in https://github.com/raspberrypi/utils
-        let mut data = [0; 0x20];
-        self.pio.read_hw(PROC_PIO_SM0_CLKDIV_OFFSET + self.index as u32 * 0x20, &mut data)?;
+        let mut data = [0; 8];
+        self.pio.read_hw(PROC_PIO_SM0_CLKDIV_OFFSET + self.index as u32 * 8 * 4, &mut data)?;
         let mut ctrl_data = [0; 1];
         self.pio.read_hw(PROC_PIO_CTRL_OFFSET, &mut ctrl_data)?;
         Ok(StateMachineHw {
-            enabled    : (ctrl_data[0] >> self.index as u32) != 0,
+            ctrl       : ctrl_data[0],
+            enabled    : ctrl_data[0] >> self.index as u32 & 1 != 0,
             clkdiv     : data[0],
             execctrl   : data[1],
             shiftctrl  : data[2],
@@ -477,13 +478,12 @@ impl<'a> StateMachine<'a> {
 
     pub fn read_hw_fifo(&self) -> Result<FifoHw, Error> {
         // Taken from piolib/examples/rp1sm.c in https://github.com/raspberrypi/utils
-        let mut data = [0; 64];
-        self.pio.read_hw(PROC_PIO_CTRL_OFFSET, &mut data)?;
+        let mut data = [0; 4];
+        self.pio.read_hw(PROC_PIO_FSTAT_OFFSET, &mut data)?;
         let raw = RawFifoHw {
-            ctrl    : data[0],
-            fstat   : data[1],
-            flevel  : data[3],
-            flevel2 : data[4],
+            fstat   : data[0],
+            flevel  : data[2],
+            flevel2 : data[3],
         };
         Ok(FifoHw {
             tx: FifoState {
@@ -550,8 +550,9 @@ impl TryFrom<f64> for ClkDiv {
 
 #[derive(Debug)]
 pub struct StateMachineHw {
+    pub ctrl       : u32, // PROC_PIO_CTRL_OFFSET contains enable for all SMs
     pub enabled    : bool,
-    pub clkdiv     : u32,
+    pub clkdiv     : u32, // PROC_PIO_SM*_CLKDIV_OFFSET
     pub execctrl   : u32,
     pub shiftctrl  : u32,
     pub pc         : u32,
@@ -563,7 +564,6 @@ pub struct StateMachineHw {
 
 #[derive(Debug)]
 pub struct RawFifoHw {
-    pub ctrl    : u32,
     pub fstat   : u32,
     pub flevel  : u32,
     pub flevel2 : u32,
