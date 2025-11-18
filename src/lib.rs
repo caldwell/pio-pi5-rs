@@ -6,9 +6,10 @@ pub mod gpio;
 mod ioctl;
 #[path="proc-pio.rs"]
 pub mod proc_pio;
-mod rp1pio;
+#[path="pio-rp1.rs"]
+mod pio_rp1;
 
-pub use self::rp1pio::*;
+pub use self::pio_rp1::*;
 pub use self::config::SmConfig;
 
 use std::sync::{LazyLock, Mutex};
